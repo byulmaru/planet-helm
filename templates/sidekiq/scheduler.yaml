@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sidekiq-scheduler
+  annotations:
+    secrets.infisical.com/auto-reload: "true"
+spec:
+  selector:
+    matchLabels:
+      app: sidekiq
+      queue: scheduler
+  template:
+    metadata:
+      labels:
+        app: sidekiq
+        queue: scheduler
+    spec:
+      enableServiceLinks: false
+      containers:
+        - name: sidekiq
+          image: ghcr.io/byulmaru/mastodon
+          command:
+            - bundle
+            - exec
+            - sidekiq
+            - -c
+            - "20"
+            - -q
+            - scheduler
+          envFrom:
+            - secretRef:
+                name: env
+          env:
+            - name: MASTODON_PROMETHEUS_EXPORTER_ENABLED
+              value: "true"
+            - name: MASTODON_PROMETHEUS_EXPORTER_LOCAL
+              value: "true"
+            - name: MASTODON_PROMETHEUS_EXPORTER_HOST
+              value: "0.0.0.0"
+            - name: MASTODON_PROMETHEUS_EXPORTER_SIDEKIQ_DETAILED_METRICS
+              value: "true"
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - "ps aux | grep '[s]idekiq' || false"
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - "ps aux | grep '[s]idekiq' || false"
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+          ports:
+            - containerPort: 9394
+      resources:
+        requests:
+          cpu: 250m
+          memory: 512Mi
+        limits:
+          cpu: 500m
+          memory: 1Gi
+      tolerations:
+        - key: "oci.oraclecloud.com/oke-is-preemptible"
+          operator: "Equal"
+          value: "present"
+          effect: "NoSchedule"

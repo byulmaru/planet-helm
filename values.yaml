@@ -1,0 +1,11 @@
+prometheus-adapter:
+  prometheus:
+    url: http://prometheus-operated.prometheus.svc.cluster.local
+  rules:
+    default: false
+    external:
+      - seriesQuery: '{__name__="sidekiq_queue_latency_seconds",namespace!="",queue!=""}'
+        resources:
+          overrides:
+            namespace: { resource: namespace }
+        metricsQuery: "max(<<.Series>>{<<.LabelMatchers>>}) by (queue)"

@@ -1,0 +1,12 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: sidekiq
+  labels:
+    prometheus: pod-monitor
+spec:
+  selector:
+    matchLabels:
+      app: sidekiq
+  podMetricsEndpoints:
+    - portNumber: 9394
