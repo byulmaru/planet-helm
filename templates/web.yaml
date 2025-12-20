@@ -1,0 +1,118 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+spec:
+  type: ClusterIP
+  ports:
+    - port: 3000
+      targetPort: 3000
+      name: web
+  selector:
+    app: web
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+  annotations:
+    secrets.infisical.com/auto-reload: "true"
+  labels:
+    app: web
+spec:
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      enableServiceLinks: false
+      containers:
+        - name: web
+          image: ghcr.io/byulmaru/mastodon
+          command:
+            - bundle
+            - exec
+            - puma
+            - -C
+            - config/puma.rb
+          envFrom:
+            - secretRef:
+                name: env
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "500m"
+            limits:
+              memory: "2Gi"
+              cpu: "1000m"
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - "curl -s --noproxy localhost localhost:3000/health | grep -q 'OK' || exit 1"
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - "curl -s --noproxy localhost localhost:3000/health | grep -q 'OK' || exit 1"
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 1
+              preference:
+                matchExpressions:
+                  - key: oci.oraclecloud.com/oke-is-preemptible
+                    operator: Exists
+                    values: []
+      tolerations:
+        - key: "oci.oraclecloud.com/oke-is-preemptible"
+          operator: "Equal"
+          value: "present"
+          effect: "NoSchedule"
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: web
+spec:
+  minAvailable: 50%
+  selector:
+    matchLabels:
+      app: web
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: web
+  namespace: planet
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: web
+  minReplicas: 2
+  maxReplicas: 20
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 80
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+    scaleUp:
+      stabilizationWindowSeconds: 30
