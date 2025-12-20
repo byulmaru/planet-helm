@@ -67,6 +67,15 @@ spec:
         limits:
           cpu: 500m
           memory: 1Gi
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 1
+              preference:
+                matchExpressions:
+                  - key: oci.oraclecloud.com/oke-is-preemptible
+                    operator: Exists
+                    values: []
       tolerations:
         - key: "oci.oraclecloud.com/oke-is-preemptible"
           operator: "Equal"
