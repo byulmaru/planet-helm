@@ -1,0 +1,28 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: planet
+spec:
+  rules:
+    - host: planet.moe
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: web
+                port:
+                  name: web
+          - path: /api/v1/streaming
+            pathType: Prefix
+            backend:
+              service:
+                name: streaming
+                port:
+                  name: streaming
+  tls:
+    - hosts:
+        - planet.moe
+      secretName: certificate
+  ingressClassName: nginx
