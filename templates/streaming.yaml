@@ -1,0 +1,105 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: streaming
+spec:
+  type: ClusterIP
+  ports:
+    - port: 4000
+      targetPort: 4000
+      name: streaming
+  selector:
+    app: streaming
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: streaming
+  namespace: planet
+  annotations:
+    secrets.infisical.com/auto-reload: "true"
+  labels:
+    app: streaming
+spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 50%
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: streaming
+  template:
+    metadata:
+      labels:
+        app: streaming
+    spec:
+      enableServiceLinks: false
+      containers:
+        - name: streaming
+          image: ghcr.io/byulmaru/mastodon-streaming
+          command:
+            - node
+            - streaming/index.js
+          envFrom:
+            - secretRef:
+                name: env
+          resources:
+            requests:
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "100m"
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - "curl -s --noproxy localhost localhost:4000/api/v1/streaming/health | grep -q 'OK' || exit 1"
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - "curl -s --noproxy localhost localhost:4000/api/v1/streaming/health | grep -q 'OK' || exit 1"
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 1
+              preference:
+                matchExpressions:
+                  - key: oci.oraclecloud.com/oke-is-preemptible
+                    operator: Exists
+                    values: []
+      tolerations:
+        - key: "oci.oraclecloud.com/oke-is-preemptible"
+          operator: "Equal"
+          value: "present"
+          effect: "NoSchedule"
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: streaming
+  namespace: planet
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: streaming
+  minReplicas: 1
+  maxReplicas: 3
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 80
