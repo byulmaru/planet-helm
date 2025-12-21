@@ -1,13 +1,14 @@
-apiVersion: apiregistration.k8s.io/v1
-kind: APIService
-metadata:
-  name: v1beta2.custom.metrics.k8s.io
-spec:
-  group: custom.metrics.k8s.io
-  groupPriorityMinimum: 100
-  insecureSkipTLSVerify: true
-  service:
-    name: planet-prometheus-adapter
-    namespace: planet
-  version: v1beta2
-  versionPriority: 100
+# Custom Metrics가 필요할 때 주석 제거
+# apiVersion: apiregistration.k8s.io/v1
+# kind: APIService
+# metadata:
+#   name: v1beta2.custom.metrics.k8s.io
+# spec:
+#   group: custom.metrics.k8s.io
+#   groupPriorityMinimum: 100
+#   insecureSkipTLSVerify: true
+#   service:
+#     name: planet-prometheus-adapter
+#     namespace: planet
+#   version: v1beta2
+#   versionPriority: 100
