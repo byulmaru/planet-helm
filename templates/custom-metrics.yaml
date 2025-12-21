@@ -7,7 +7,7 @@ spec:
   groupPriorityMinimum: 100
   insecureSkipTLSVerify: true
   service:
-    name: prometheus-adapter
+    name: planet-prometheus-adapter
     namespace: planet
   version: v1beta2
   versionPriority: 100
