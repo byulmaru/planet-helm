@@ -81,3 +81,4 @@ spec:
           operator: "Equal"
           value: "present"
           effect: "NoSchedule"
+      priorityClassName: preemptible

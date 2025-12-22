@@ -81,6 +81,7 @@ spec:
           operator: "Equal"
           value: "present"
           effect: "NoSchedule"
+      priorityClassName: preemptible
 ---
 apiVersion: policy/v1
 kind: PodDisruptionBudget
