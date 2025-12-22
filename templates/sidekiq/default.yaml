@@ -93,7 +93,7 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: sidekiq-default
-  minReplicas: 1
+  minReplicas: 2
   maxReplicas: 10
   metrics:
     - type: External
@@ -105,17 +105,17 @@ spec:
               queue: default
         target:
           type: Value
-          value: 5
+          value: 3
 
   behavior:
     scaleDown:
-      stabilizationWindowSeconds: 60
+      stabilizationWindowSeconds: 0
       policies:
         - type: Percent
           value: 50
           periodSeconds: 30
     scaleUp:
-      stabilizationWindowSeconds: 30
+      stabilizationWindowSeconds: 0
       policies:
         - type: Pods
           value: 1
