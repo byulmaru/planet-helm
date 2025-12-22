@@ -1,0 +1,85 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Pooler
+metadata:
+  name: postgres-pooler-rw
+spec:
+  cluster:
+    name: postgres
+
+  instances: 3
+  type: rw
+
+  pgbouncer:
+    poolMode: transaction
+    parameters:
+      max_client_conn: "1000"
+      default_pool_size: "25"
+      max_db_connections: "50"
+
+  template:
+    metadata:
+      labels:
+        app: postgres-pooler-rw
+    spec:
+      containers: []
+      resources:
+        requests:
+          cpu: 50m
+          memory: 32Mi
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 1
+              preference:
+                matchExpressions:
+                  - key: oci.oraclecloud.com/oke-is-preemptible
+                    operator: Exists
+                    values: []
+      tolerations:
+        - key: "oci.oraclecloud.com/oke-is-preemptible"
+          operator: "Equal"
+          value: "present"
+          effect: "NoSchedule"
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Pooler
+metadata:
+  name: postgres-pooler-ro
+spec:
+  cluster:
+    name: postgres
+
+  instances: 3
+  type: ro
+
+  pgbouncer:
+    poolMode: transaction
+    parameters:
+      max_client_conn: "1000"
+      default_pool_size: "25"
+      max_db_connections: "50"
+
+  template:
+    metadata:
+      labels:
+        app: postgres-pooler-ro
+    spec:
+      containers: []
+      resources:
+        requests:
+          cpu: 50m
+          memory: 32Mi
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 1
+              preference:
+                matchExpressions:
+                  - key: oci.oraclecloud.com/oke-is-preemptible
+                    operator: Exists
+                    values: []
+      tolerations:
+        - key: "oci.oraclecloud.com/oke-is-preemptible"
+          operator: "Equal"
+          value: "present"
+          effect: "NoSchedule"
