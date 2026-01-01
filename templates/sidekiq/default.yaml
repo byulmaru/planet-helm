@@ -83,6 +83,17 @@ spec:
           effect: "NoSchedule"
       priorityClassName: preemptible
 ---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: sidekiq-default
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: sidekiq
+      queue: default
+---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:

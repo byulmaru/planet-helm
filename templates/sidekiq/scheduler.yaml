@@ -82,3 +82,14 @@ spec:
           value: "present"
           effect: "NoSchedule"
       priorityClassName: preemptible
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: sidekiq-scheduler
+spec:
+  minAvailable: 0
+  selector:
+    matchLabels:
+      app: sidekiq
+      queue: scheduler
