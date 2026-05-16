@@ -56,8 +56,8 @@ spec:
                 - "curl -s --noproxy localhost localhost:3000/health | grep -q 'OK' || exit 1"
             initialDelaySeconds: 60
             periodSeconds: 30
-            timeoutSeconds: 5
-            failureThreshold: 3
+            timeoutSeconds: 10
+            failureThreshold: 5
           readinessProbe:
             exec:
               command:
@@ -66,7 +66,7 @@ spec:
                 - "curl -s --noproxy localhost localhost:3000/health | grep -q 'OK' || exit 1"
             initialDelaySeconds: 30
             periodSeconds: 10
-            timeoutSeconds: 5
+            timeoutSeconds: 10
       affinity:
         nodeAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -103,7 +103,7 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: web
-  minReplicas: 2
+  minReplicas: 4
   maxReplicas: 30
   metrics:
     - type: Resource
@@ -114,14 +114,10 @@ spec:
           averageUtilization: 80
   behavior:
     scaleDown:
-      stabilizationWindowSeconds: 30
-      selectPolicy: Min
+      stabilizationWindowSeconds: 300
       policies:
-        - type: Percent
-          value: 50
-          periodSeconds: 60
         - type: Pods
-          value: 2
+          value: 1
           periodSeconds: 60
     scaleUp:
       stabilizationWindowSeconds: 30
